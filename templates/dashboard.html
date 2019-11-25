@@ -7,9 +7,11 @@
       <script type = "text/javascript" src = "https://code.jquery.com/jquery-2.1.1.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.4/js/materialize.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
+      <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+
    </head>
 
-   <body bgcolor="#FFFFFD">
+   <body>
       <ul id="slide-out" class="sidenav">
          <li>
             <div class="user-view">
@@ -77,10 +79,19 @@
                         <a href="{{url_for('routerCentral')}}">Router Central</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Visit our HTML tutorial</a>
+                        <a href="https://www.w3schools.com/html/">Servers' Router</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Visit our HTML tutorial</a>
+                        <a href="https://www.w3schools.com/html/">Networks Department Router</a>
+                     </div>
+                     <div class = "col s12">
+                        <a href="https://www.w3schools.com/html/">HR Department Router</a>
+                     </div>
+                     <div class = "col s12">
+                        <a href="https://www.w3schools.com/html/">Finances Department Router</a>
+                     </div>
+                     <div class = "col s12">
+                        <a href="https://www.w3schools.com/html/">Development department's router</a>
                      </div>
                   </div>
                </div>
@@ -106,48 +117,101 @@
       <a href="#" data-target="slide-out" class="sidenav-trigger"><i class="material-icons">menu</i></a>
 
       <div class = "row">
+
          <div class = "col s12 m4 l12">
             <center>
-               <h5 class="flow-text">Servidor de Base de Datos</h5>
+               <h5 class="flow-text">Central Router</h5>
             </center>
+            <hr style="width:28%;">
 
             <div class = "col s2 m4 l4">
                <center>
                   <p>Temperatura del dispositivo</p>
                </center>
-               <canvas id="GraficaUno" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaUno" width="350" height="190"></canvas>
                <center>
                   <p>Carga del CPU</p>
                </center>
-               <canvas id="GraficaDos" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaDos" width="350" height="190"></canvas>
             </div>
 
             <div class = "col s2 m4 l4">
                <center>
                   <p>Memoria disponible del dispositivo</p>
                </center>
-               <canvas id="GraficaTres" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaTres" width="350" height="190"></canvas>
                <center>
                   <p>Temperatura del dispositivo</p>
                </center>
-               <canvas id="GraficaCuatro" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaCuatro" width="350" height="190"></canvas>
             </div>
 
             <div class = "col s2 m4 l4">
                <center>
                   <p>Tráfico entrada del dispositivo</p>
                </center>
-               <canvas id="GraficaCinco" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaCinco" width="350" height="190"></canvas>
                <center>
                   <p>Tráfico saliente del dispositivo</p>
                </center>
-               <canvas id="GraficaSeis" width="350" height="190" style="border:1px solid #000000;"></canvas>
+               <canvas id="GraficaSeis" width="350" height="190"></canvas>
+
             </div>
 
       </div>
       </div>
+      <br>
+      <center>
+         <h5 class="flow-text">Información acerca del dispositivo</h5>
+      </center>
+      <hr style="width:35%;">
 
-
+      <br>
+      <div class="container">
+          <table class = "bordered striped centered responsive grey lighten-5" >
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Name</td>
+                <td>Notebook i7 8GB White</td>
+              </tr>
+              <tr>
+                <td>Version</td>
+                <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Memory</td>
+                <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Time up</td>
+                <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Temperature</td>
+                <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Processor board ID</td>
+                <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Technical Support</td>
+                <td>Blue pen</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <br>
+        <center>
+        <a class="waves-effect light-blue darken-4 btn-small"><i class="material-icons left">timeline</i>Gegenerate report</a>
+      </center>
+      <br>
       <script>
       $(document).ready(function() {
           $('.collapsible').collapsible();
@@ -155,88 +219,209 @@
       $(document).ready(function() {
           $('.sidenav').sidenav();
       });
-      var ctx = document.getElementById("GraficaUno").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      var ctx = document.getElementById("GraficaDos").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      var ctx = document.getElementById("GraficaTres").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      var ctx = document.getElementById("GraficaCuatro").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      var ctx = document.getElementById("GraficaCinco").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      var ctx = document.getElementById("GraficaSeis").getContext("2d");
-      var myChart = new Chart(ctx, {
-          type: "bar",
-          data: {
-              labels: ['col1', 'col2', 'col3'],
-              datasets: [{
-                  label: 'Num datos',
-                  data: [10, 13, 15]
-              }]
-          }
-      });
-      new Chart(document.getElementById("GraficaPastel"), {
-          type: 'pie',
-          data: {
-            labels: ["Africa", "Asia"],
-            datasets: [{
-              label: "Population (millions)",
-              backgroundColor: ["#3e95cd", "#8e5ea2"],
-              data: [50,50]
-            }]
-          },
-          options: {
-            title: {
-              display: true,
-            }
-          }
-      });
+
+
+      window.myBar = new Chart(document.getElementById("GraficaUno"), {
+              type: 'line',
+              data: {
+                labels: ["0s", "10s", "20s", "30s", "40s", "50s","60s"],
+                datasets: [{
+                  label: "Temperature (Celsious)",
+                  data: [{%for item in listaDeTemperaturas %}
+                          "{{item}}",
+                        {% endfor %}],
+                  lineTension: 0,
+                  fill: true,
+                  borderColor: 'orange',
+                  backgroundColor: 'transparent',
+                  borderDash: [5, 5],
+                  pointBorderColor: 'orange',
+                  pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                  pointRadius: 5,
+                  pointHoverRadius: 10,
+                  pointHitRadius: 30,
+                  pointBorderWidth: 2,
+                  pointStyle: 'rectRounded'
+                }]
+              },
+              options: {
+                legend: {
+                  display: true,
+                  position: 'down',
+                  labels: {
+                    boxWidth: 80,
+                    fontColor: 'black'
+                  }
+                }
+              }
+        });
+      window.myBar = new Chart(document.getElementById("GraficaDos"), {
+                type: 'line',
+                data: {
+                  labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+                  datasets: [{
+                    label: "Temperature (Celsious)",
+                    data: [0, 59, 100, 20, 20, 55, 40],
+                    lineTension: 0,
+                    fill: false,
+                    borderColor: 'orange',
+                    backgroundColor: 'transparent',
+                    borderDash: [5, 5],
+                    pointBorderColor: 'orange',
+                    pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                    pointRadius: 5,
+                    pointHoverRadius: 10,
+                    pointHitRadius: 30,
+                    pointBorderWidth: 2,
+                    pointStyle: 'rectRounded'
+                  }]
+                },
+                options: {
+                  legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                      boxWidth: 80,
+                      fontColor: 'black'
+                    }
+                  }
+                }
+          });
+      window.myBar = new Chart(document.getElementById("GraficaTres"), {
+                  type: 'line',
+                  data: {
+                    labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+                    datasets: [{
+                      label: "Temperature (Celsious)",
+                      data: [0, 59, 100, 20, 20, 55, 40],
+                      lineTension: 0,
+                      fill: false,
+                      borderColor: 'orange',
+                      backgroundColor: 'transparent',
+                      borderDash: [5, 5],
+                      pointBorderColor: 'orange',
+                      pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                      pointRadius: 5,
+                      pointHoverRadius: 10,
+                      pointHitRadius: 30,
+                      pointBorderWidth: 2,
+                      pointStyle: 'rectRounded'
+                    }]
+                  },
+                  options: {
+                    legend: {
+                      display: true,
+                      position: 'top',
+                      labels: {
+                        boxWidth: 80,
+                        fontColor: 'black'
+                      }
+                    }
+                  }
+            });
+      window.myBar = new Chart(document.getElementById("GraficaCuatro"), {
+                    type: 'line',
+                    data: {
+                      labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+                      datasets: [{
+                        label: "Temperature (Celsious)",
+                        data: [0, 59, 100, 20, 20, 55, 40],
+                        lineTension: 0,
+                        fill: false,
+                        borderColor: 'orange',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        pointBorderColor: 'orange',
+                        pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                        pointRadius: 5,
+                        pointHoverRadius: 10,
+                        pointHitRadius: 30,
+                        pointBorderWidth: 2,
+                        pointStyle: 'rectRounded'
+                      }]
+                    },
+                    options: {
+                      legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                          boxWidth: 80,
+                          fontColor: 'black'
+                        }
+                      }
+                    }
+              });
+      window.myBar = new Chart(document.getElementById("GraficaCinco"), {
+                      type: 'line',
+                      data: {
+                        labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+                        datasets: [{
+                          label: "Temperature (Celsious)",
+                          data: [0, 59, 100, 20, 20, 55, 40],
+                          lineTension: 0,
+                          fill: false,
+                          borderColor: 'orange',
+                          backgroundColor: 'transparent',
+                          borderDash: [5, 5],
+                          pointBorderColor: 'orange',
+                          pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                          pointRadius: 5,
+                          pointHoverRadius: 10,
+                          pointHitRadius: 30,
+                          pointBorderWidth: 2,
+                          pointStyle: 'rectRounded'
+                        }]
+                      },
+                      options: {
+                        legend: {
+                          display: true,
+                          position: 'top',
+                          labels: {
+                            boxWidth: 80,
+                            fontColor: 'black'
+                          }
+                        }
+                      }
+                });
+      window.myBar = new Chart(document.getElementById("GraficaSeis"), {
+                        type: 'line',
+                        data: {
+                          labels: ["0s", "10s", "20s", "30s", "40s", "50s", "60s"],
+                          datasets: [{
+                            label: "Temperature (Celsious)",
+                            data: [0, 59, 100, 20, 20, 55, 40],
+                            lineTension: 0,
+                            fill: false,
+                            borderColor: 'orange',
+                            backgroundColor: 'transparent',
+                            borderDash: [5, 5],
+                            pointBorderColor: 'orange',
+                            pointBackgroundColor: 'rgba(255,150,0,0.5)',
+                            pointRadius: 5,
+                            pointHoverRadius: 10,
+                            pointHitRadius: 30,
+                            pointBorderWidth: 2,
+                            pointStyle: 'rectRounded'
+                          }]
+                        },
+                        options: {
+                          legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                              boxWidth: 80,
+                              fontColor: 'black'
+                            }
+                          }
+                        }
+                  });
+
+
+
+
+
+
+
       </script>
    </body>
 </html>
