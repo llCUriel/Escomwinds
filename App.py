@@ -12,18 +12,37 @@ from flask import Response
 
 app = Flask(__name__)
 
+
+@app.route('/updateData')
+def updateGraphData(methods = ['POST']):
+
+    return "hola"
+
 @app.route("/")
 def index():
     return render_template('dashboard.html')
 
 @app.route("/routerCentral")
 def routerCentral():
-    listaDeTemperaturas = generarTemperatura(40,100)
-    return render_template('dashboard.html', listaDeTemperaturas = listaDeTemperaturas)
+    listaDeTemperaturas = [20,34,34,34,34]
+    conectarARouter("sadsa");
+    listaDePorcentajes,espacioUsado, espacioDisponible  = obtener_Memoria()
+    return render_template('dashboard.html', listaDeTemperaturas = listaDeTemperaturas,listaDePorcentajes=listaDePorcentajes, espacioUsado=espacioUsado, espacioDisponible=espacioDisponible)
 
 def conectarARouter(ip):
-    command = "telnet 10.168.100.22"
-    subprocess.call(command, shell=True)
+    command = "telnet "+ip
+    subprocess.call('ls', shell=True)
+
+
+def obtener_Memoria():
+    #command="show process memory"
+    #Salida=subprocess.check_output(command, shell=True)
+    salidaDeLaTerminal="Chido uno Total: 10 Used: 5 Free: 6"
+    x=salidaDeLaTerminal.split();
+    valorUnitario = 100.0/int(x[3])
+    porcentajeUsado = valorUnitario*int(x[5])
+    porcentajeLibre = valorUnitario*int(x[7])
+    return [porcentajeUsado,porcentajeLibre], int(x[5]), int(x[7])
 
 
 def generarTemperatura(min,max):
