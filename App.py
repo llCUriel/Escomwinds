@@ -25,13 +25,13 @@ def index():
 @app.route("/routerCentral")
 def routerCentral():
     listaDeTemperaturas = [20,34,34,34,34]
-    conectarARouter("sadsa");
+    conectarARouter("10..200.200.22");
     listaDePorcentajes,espacioUsado, espacioDisponible  = obtener_Memoria()
     return render_template('dashboard.html', listaDeTemperaturas = listaDeTemperaturas,listaDePorcentajes=listaDePorcentajes, espacioUsado=espacioUsado, espacioDisponible=espacioDisponible)
 
 def conectarARouter(ip):
     command = "telnet "+ip
-    subprocess.call('ls', shell=True)
+    subprocess.call(command, shell=True)
 
 
 def obtener_Memoria():
