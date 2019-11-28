@@ -9,47 +9,92 @@ from flask import redirect
 from flask import url_for
 import json
 from flask import Response
+import telnetlib
+from netmiko import ConnectHandler
+from mydevices import cisco_ios_centralrouter
+from decimal import Decimal
+import concurrent.futures
+from datetime import date
+
+centralRouterFilePath = "router/centralRouter"
 
 app = Flask(__name__)
 
-
 @app.route('/updateData')
 def updateGraphData(methods = ['POST']):
-
     return "hola"
 
 @app.route("/")
 def index():
+    today = date.today()
+    print(today)
     return render_template('dashboard.html')
 
-@app.route("/routerCentral")
-def routerCentral():
-    listaDeTemperaturas = [20,34,34,34,34]
-    conectarARouter("10..200.200.22");
-    listaDePorcentajes,espacioUsado, espacioDisponible  = obtener_Memoria()
-    return render_template('dashboard.html', listaDeTemperaturas = listaDeTemperaturas,listaDePorcentajes=listaDePorcentajes, espacioUsado=espacioUsado, espacioDisponible=espacioDisponible)
+@app.route("/centralRouter")
+def centralRouter():
+    temperatureList, percentageList = [],[]
 
-def conectarARouter(ip):
-    command = "telnet "+ip
-    subprocess.call(command, shell=True)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(obtainDataFromRouter, cisco_ios_centralrouter['ip'],"centralRouter")
+        percentageList,temperatureList = future.result()
 
+    return render_template('dashboard.html', temperatureList = temperatureList, percentageList = percentageList)
 
-def obtener_Memoria():
-    #command="show process memory"
-    #Salida=subprocess.check_output(command, shell=True)
-    salidaDeLaTerminal="Chido uno Total: 10 Used: 5 Free: 6"
-    x=salidaDeLaTerminal.split();
-    valorUnitario = 100.0/int(x[3])
-    porcentajeUsado = valorUnitario*int(x[5])
-    porcentajeLibre = valorUnitario*int(x[7])
-    return [porcentajeUsado,porcentajeLibre], int(x[5]), int(x[7])
+def obtainDataFromRouter(ip,hostname):
+    temperatureList = [34,34,34,54,54,65]
+
+    output = connectRouter(ip);
+    percentageList  = obtainMemory(output)
+    _temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
 
 
-def generarTemperatura(min,max):
-    listaDeTemperaturas = []
-    temperature = random.randrange(min,max)
-    listaDeTemperaturas.append(temperature)
-    return listaDeTemperaturas
+    return percentageList, temperatureList
+
+def obtainDataList(hostname):
+    data = []
+    definitiveRoute = choosePath(hostname)
+    f = open(definitiveRoute,'r')
+    for line in f:
+        data.append(line.rstrip())
+    f.close()
+    for i in range(0,len(data)):
+        data[i] = data[i].split('|')
+    return data
+
+def choosePath(hostname):
+    if hostname == 'centralRouter':
+        return centralRouterFilePath
+    else:
+        return ""
+
+
+def obtainAllDataList(hostname):
+    dataList = obtainDataList(hostname)
+    temperatureList, cpuLoadList, timeUpList = [],[],[]
+    dateIndex = 1
+
+    for list in dataList:
+        temperatureList.append([list[dateIndex],list[2]])
+        cpuLoadList.append([list[dateIndex],list[4]])
+        timeUpList.append([list[dateIndex],list[3]])
+
+    return temperatureList,cpuLoadList,timeUpList
+
+def connectRouter(ip):
+    device = ConnectHandler(**cisco_ios_centralrouter)
+    output = device.send_command("show process memory")
+    return str(output)
+
+def obtainMemory(routerOutput):
+    x=routerOutput.split();
+    unitValue = 100.0/int(x[3])
+    freePercentage = Decimal(unitValue*int(x[5]))
+    usedPercentage = Decimal(unitValue*int(x[7]))
+    return [round(usedPercentage,2),round(freePercentage,2)]
+
+
+def generateTemperature(min,max):
+    return random.randrange(min,max)
 
 if __name__ == "__main__":
     app.run(port=8001, debug=True)

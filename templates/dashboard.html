@@ -1,13 +1,11 @@
 <html>
    <head>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.4/css/materialize.min.css">
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-      <script type = "text/javascript" src = "https://code.jquery.com/jquery-2.1.1.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-alpha.4/js/materialize.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.js"></script>
-      <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+      <link rel="stylesheet" href="../static/css/materialize.min.css">
+      <script type = "text/javascript" src = "../static/js/jquery-2.1.1.min.js"></script>
+      <link rel="stylesheet" href="../static/css/icon.css">
+      <script type = "text/javascript" src = "../static/js/Chart.js"></script>
+      <script type = "text/javascript" src = "../static/js/materialize.min.js"></script>
+
 
    </head>
 
@@ -77,7 +75,7 @@
                <div class="collapsible-body">
                   <div class = "row">
                      <div class = "col s12">
-                        <a href="{{url_for('routerCentral')}}">Router Central</a>
+                        <a href="{{url_for('centralRouter')}}">Router Central</a>
                      </div>
                      <div class = "col s12">
                         <a href="https://www.w3schools.com/html/">Servers' Router</a>
@@ -178,7 +176,7 @@
       <br>
       <div class="container">
         <div class="z-depth-5">
-
+          <center>
           <table class = "bordered striped centered responsive amber lighten-5" style="border: 1px solid yellow">
             <thead>
               <tr>
@@ -221,6 +219,7 @@
               </tr>
             </tbody>
           </table>
+        </center>
         </div>
       </div>
         <br>
@@ -251,7 +250,7 @@ window.myBar = new Chart(document.getElementById("GraficaTres"), {
                 labels: ["0s", "10s", "20s", "30s", "40s", "50s","60s"],
                 datasets: [{
                   label: "Temperature (Celsious)",
-                  data: [{%for item in listaDeTemperaturas %}
+                  data: [{%for item in temperatureList %}
                           "{{item}}",
                         {% endfor %}],
                   lineTension: 0,
@@ -336,7 +335,7 @@ window.myBar = new Chart(document.getElementById("GraficaCuatro"), {
                                           borderColor: 'black',
                                           backgroundColor: ["lightcoral", "skyblue"],
                                           yAxisID: 'revenues',
-                                          data: [{% for item in listaDePorcentajes %}
+                                          data: [{% for item in percentageList %}
                                                 "{{item}}",
                                                 {% endfor %}
                                           ]
