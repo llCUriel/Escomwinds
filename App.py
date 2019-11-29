@@ -32,23 +32,57 @@ def index():
 
 @app.route("/centralRouter")
 def centralRouter():
-    temperatureList, percentageList = [],[]
+    temperatureList, percentageList, timeUpList = [],[],[]
 
+    #EscribirRegistro("centralRouter","2","2019-11-27","50","100","21\n")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(obtainDataFromRouter, cisco_ios_centralrouter['ip'],"centralRouter")
-        percentageList,temperatureList = future.result()
+        percentageList,temperatureList,timeUpList = future.result()
+
+
+    temperatureList = temperatureList[-7:]
+
 
     return render_template('dashboard.html', temperatureList = temperatureList, percentageList = percentageList)
 
+
+def obtainLastIndex(someList):
+    return someList[len(someList)-1][0]
+
+
 def obtainDataFromRouter(ip,hostname):
-    temperatureList = [34,34,34,54,54,65]
+    device = connectRouter(ip);
 
-    output = connectRouter(ip);
-    percentageList  = obtainMemory(output)
-    _temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
+    output1 = device.send_command("show process memory")
+    output2 = device.send_command("sh version")
+
+    percentageList  = obtainMemory(output1)
+    timeUp = obtainTimeUp(output2)
+
+    #EscribirRegistro(hostname,'1',str(date.today()),"34.6",timeUp,"100");
+
+    #temperatura = obtainTemperatura(output3)
+    #carga = obtainCarga(output4)
+    #EscribirRegistro(hostname,1,date.today(),temperatura,timeUp,obtainCarga);
+    temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
+    lastIndex = int(obtainLastIndex(timeUpList))
+    writeRegister(hostname,lastIndex+1,date.today(),'23',timeUp,'23')
+    print(temperatureList)
 
 
-    return percentageList, temperatureList
+    obtainLastIndex(timeUpList)
+
+    return percentageList, temperatureList,timeUp
+
+def obtainTemperatura(output):
+    print(output)
+
+def obtainCarga(output):
+    print(output)
+
+def obtainTimeUp(output):
+    return output.split()[43]
+
 
 def obtainDataList(hostname):
     data = []
@@ -60,6 +94,15 @@ def obtainDataList(hostname):
     for i in range(0,len(data)):
         data[i] = data[i].split('|')
     return data
+
+
+
+def writeRegister(hostname,id,date,temperature,timeup,cpuload):
+    definitiveRoute = choosePath(hostname)
+    f = open(definitiveRoute,'a')
+    line = str(id)+'|'+str(date)+'|'+temperature+'|'+timeup+'|'+cpuload+'\n'
+    f.write(line)
+    f.close()
 
 def choosePath(hostname):
     if hostname == 'centralRouter':
@@ -74,16 +117,13 @@ def obtainAllDataList(hostname):
     dateIndex = 1
 
     for list in dataList:
-        temperatureList.append([list[dateIndex],list[2]])
-        cpuLoadList.append([list[dateIndex],list[4]])
-        timeUpList.append([list[dateIndex],list[3]])
-
+        temperatureList.append([list[0],list[dateIndex],list[2]])
+        cpuLoadList.append([list[0],list[dateIndex],list[4]])
+        timeUpList.append([list[0],list[dateIndex],list[3]])
     return temperatureList,cpuLoadList,timeUpList
 
 def connectRouter(ip):
-    device = ConnectHandler(**cisco_ios_centralrouter)
-    output = device.send_command("show process memory")
-    return str(output)
+    return ConnectHandler(**cisco_ios_centralrouter)
 
 def obtainMemory(routerOutput):
     x=routerOutput.split();
