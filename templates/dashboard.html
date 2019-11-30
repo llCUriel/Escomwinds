@@ -251,7 +251,7 @@ window.myBar = new Chart(document.getElementById("GraficaTres"), {
                 datasets: [{
                   label: "Temperature (Celsious)",
                   data: [{%for item in temperatureList %}
-                          "{{item}}",
+                          "{{item[2]}}",
                         {% endfor %}],
                   lineTension: 0,
                   fill: true,

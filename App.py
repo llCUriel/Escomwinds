@@ -42,7 +42,6 @@ def centralRouter():
 
     temperatureList = temperatureList[-7:]
 
-
     return render_template('dashboard.html', temperatureList = temperatureList, percentageList = percentageList)
 
 
@@ -67,10 +66,8 @@ def obtainDataFromRouter(ip,hostname):
     temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
     lastIndex = int(obtainLastIndex(timeUpList))
     writeRegister(hostname,lastIndex+1,date.today(),'23',timeUp,'23')
-    print(temperatureList)
 
 
-    obtainLastIndex(timeUpList)
 
     return percentageList, temperatureList,timeUp
 
