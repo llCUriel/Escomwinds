@@ -139,12 +139,12 @@
 
             <div class = "col s2 m4 l4">
                <center>
-                  <p>Time up</p>
+                  <p>Temperature history</p>
                </center>
                <canvas id="GraficaTres" width="350" height="190"></canvas>
 
                <canvas id="GraficaCuatro" width="350" height="190"></canvas>
-               <center><p>Used memory: {{espacioUsado}} Free memory: {{espacioDisponible}}</p></center>
+               <center><p><b>Used memory:</b> {{usedSpace}} <b>Free memory:</b> {{freeSpace}}</p></center>
             </div>
 
             <div class = "col s2 m4 l4 z-depth-3">
@@ -187,11 +187,11 @@
             <tbody>
               <tr>
                 <td>Name</td>
-                <td>Notebook i7 8GB White</td>
+                <td>{{deviceName}}</td>
               </tr>
               <tr>
                 <td>Version</td>
-                <td>Blue pen</td>
+                <td>{{deviceVersion}}</td>
               </tr>
               <tr>
                 <td>Memory</td>
@@ -211,11 +211,16 @@
               </tr>
               <tr>
                 <td>Technical Support</td>
-                <td>Blue pen</td>
+                <td>{{technicalSupport}}</td>
               </tr>
               <tr>
                 <td>Image</td>
                 <td>Blue pen</td>
+              </tr>
+              <tr>
+                <td>Image</td>
+                <td><a href="../static/img/cisco3700.png">View image</a></td>
+
               </tr>
             </tbody>
           </table>
@@ -236,6 +241,7 @@
       </center>
       <br>
       <script>
+
       $(document).ready(function() {
           $('.collapsible').collapsible();
       });
@@ -247,7 +253,9 @@
 window.myBar = new Chart(document.getElementById("GraficaTres"), {
               type: 'line',
               data: {
-                labels: ["0s", "10s", "20s", "30s", "40s", "50s","60s"],
+                labels: [{% for item in temperatureList%}
+                              "{{item[1]}}",
+                          {% endfor %}],
                 datasets: [{
                   label: "Temperature (Celsious)",
                   data: [{%for item in temperatureList %}
@@ -281,10 +289,15 @@ window.myBar = new Chart(document.getElementById("GraficaTres"), {
 window.myBar = new Chart(document.getElementById('GraficaDos'), {
           type: 'line',
           data: {
-            labels: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+            labels: [{% for item in cpuLoadList %}
+                        "{{item[1]}}",
+                      {% endfor %}
+                    ],
             datasets: [{
-              label: 'apples',
-              data: [12, 19, 3, 17, 6, 3, 7],
+              label: 'CPU Load (%)',
+              data: [{%for item in cpuLoadList %}
+                      "{{item[2]}}",
+                      {% endfor %}],
               backgroundColor: "rgba(200,255,51,0.6)"
             }]
           }
@@ -292,10 +305,16 @@ window.myBar = new Chart(document.getElementById('GraficaDos'), {
 window.myBar = new Chart(document.getElementById("GraficaUno"), {
           type: 'bar',
           data: {
-            labels: ["CS", "IT" , "ECE" , "EE", "ME", "BE"],
+            labels: [{%for item in timeUpList %}
+                      "{{item[1]}}",
+                     {% endfor %}],
             datasets: [
-              { label: 'Last Temperature',
-                data: [105,124,78,91,62,56],
+              { label: 'Last time up (minutes)',
+
+              data: [{%for item in timeUpList %}
+                          "{{item[2]}}",
+                        {% endfor %}],
+
                 backgroundColor :['rgba(255, 99, 132, 0.2)',
                         'rgba(54, 162, 235, 0.2)',
                         'rgba(255, 206, 86, 0.2)',
