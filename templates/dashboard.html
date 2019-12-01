@@ -9,7 +9,7 @@
 
    </head>
 
-   <body style="background-color: #FFFFEE;">
+   <body>
 
       <ul id="slide-out" class="sidenav">
          <li>
@@ -75,22 +75,22 @@
                <div class="collapsible-body">
                   <div class = "row">
                      <div class = "col s12">
-                        <a href="{{url_for('centralRouter')}}">Router Central</a>
+                        <a href="{{url_for('R6')}}">Central Router (R6)</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Servers' Router</a>
+                        <a href="https://www.w3schools.com/html/">Servers' Router (R2)</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Networks Department Router</a>
+                        <a href="https://www.w3schools.com/html/">Networks Department Router (R3)</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">HR Department Router</a>
+                        <a href="https://www.w3schools.com/html/">HR Department Router (R5)</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Finances Department Router</a>
+                        <a href="https://www.w3schools.com/html/">Finances Department Router (R4)</a>
                      </div>
                      <div class = "col s12">
-                        <a href="https://www.w3schools.com/html/">Development department's router</a>
+                        <a href="https://www.w3schools.com/html/">Development department's router (R1)</a>
                      </div>
                   </div>
                </div>
@@ -124,7 +124,7 @@
             <hr style="width:15%;">
             <div class = "col s2 m4 l4 z-depth-3">
               <center>
-                 <p>Temperature</p>
+                 <p>Time up history</p>
               </center>
 
                <canvas id="GraficaUno" width="350" height="190"></canvas>
@@ -144,7 +144,10 @@
                <canvas id="GraficaTres" width="350" height="190"></canvas>
 
                <canvas id="GraficaCuatro" width="350" height="190"></canvas>
+               <center><p><b>Processor pool</b></p></center>
+               <center><p><b>Total:</b> {{totalSpace}}</p></center>
                <center><p><b>Used memory:</b> {{usedSpace}} <b>Free memory:</b> {{freeSpace}}</p></center>
+
             </div>
 
             <div class = "col s2 m4 l4 z-depth-3">
@@ -177,7 +180,7 @@
       <div class="container">
         <div class="z-depth-5">
           <center>
-          <table class = "bordered striped centered responsive amber lighten-5" style="border: 1px solid yellow">
+          <table class = "bordered striped centered white">
             <thead>
               <tr>
                 <th>Type</th>
@@ -186,8 +189,16 @@
             </thead>
             <tbody>
               <tr>
-                <td>Name</td>
+                <td>Device name</td>
                 <td>{{deviceName}}</td>
+              </tr>
+              <tr>
+                <td>Hostname</td>
+                <td>{{_hostname}}</td>
+              </tr>
+              <tr>
+                <td>Ip address</td>
+                <td>{{ipAddress}}</td>
               </tr>
               <tr>
                 <td>Version</td>
@@ -195,19 +206,47 @@
               </tr>
               <tr>
                 <td>Memory</td>
-                <td>Blue pen</td>
+                <td>{{_memory}}</td>
               </tr>
               <tr>
-                <td>Time up</td>
-                <td>Blue pen</td>
+                <td>NVRAM</td>
+                <td>{{NVRAM}}</td>
               </tr>
               <tr>
-                <td>Temperature</td>
-                <td>Blue pen</td>
+                <td>Last time up</td>
+                <td>{{lastTimeUp}} minutes</td>
+              </tr>
+              <tr>
+                <td>Last temperature</td>
+                <td>{{lastTemperature}} <b>°C</b></td>
               </tr>
               <tr>
                 <td>Processor board ID</td>
-                <td>Blue pen</td>
+                <td>{{processorBoardID}}</td>
+              </tr>
+
+              <tr>
+                <td>Interfaces up and its MTU (bytes)</td>
+                <td>
+                {% for item in upInterfaces%}
+                  {{item}} (1500),
+                  {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Interfaces down and its MTU (bytes)</td>
+                <td>{% for item in downInterfaces%}
+                    {{item}} (1500),
+                    {% endfor %}
+                </td>
+              </tr>
+              <tr>
+                <td>Neighbor, Interface and Holdtme</td>
+                <td>
+                  {% for item in deviceneighbors %}
+                  <a href="{{item[0]}}">{{item[0]}} ({{item[1]}}{{item[2]}},{{item[3]}}),</a>
+                  {% endfor %}
+                </td>
               </tr>
               <tr>
                 <td>Technical Support</td>
@@ -215,13 +254,9 @@
               </tr>
               <tr>
                 <td>Image</td>
-                <td>Blue pen</td>
-              </tr>
-              <tr>
-                <td>Image</td>
                 <td><a href="../static/img/cisco3700.png">View image</a></td>
-
               </tr>
+
             </tbody>
           </table>
         </center>
@@ -235,7 +270,7 @@
           <a class="waves-effect light-blue darken-4 btn-small"><i class="material-icons left">description</i>Gegenerate report</a>
           </div>
           <div class = "col s6">
-          <a class="waves-effect light-blue darken-4 btn-small"><i class="material-icons left">timeline</i>Update data</a>
+          <a class="waves-effect light-blue darken-4 btn-small" href="{{_hostname}}"><i class="material-icons left">timeline</i>Update data</a>
           </div>
         </div>
       </center>
@@ -369,12 +404,15 @@ window.myBar = new Chart(document.getElementById("GraficaCuatro"), {
 window.myBar = new Chart(document.getElementById("GraficaCinco"), {
                                       type: 'doughnut',
                                       data: {
-                                        labels: ["ICMP","TCP","BGP","IP-EIGRP","PIMv2","IGMP","UDP","OSPF","ARP"],
+                                        labels: ["IP","ICMP","TCP","BGP","IP-EIGRP","UDP","OSPF","ARP"],
                                         datasets: [
                                           {
                                             label: "Population (millions)",
-                                            backgroundColor: ["#FFDE00", "#0091FF","#FF0000","#1AFF00","#FFBC00","#000000","#DE00FF","#00F7FF","#AFAFAF"],
-                                            data: [2478,5267,734,784,433,323,434,323,1000]
+                                            backgroundColor: ["#FFDE00", "#0091FF","#FF0000","#1AFF00","#FFBC00","#000000","#DE00FF","#00F7FF"],
+                                            data: [{% for item in inTraffic %}
+                                                   "{{item}}",
+                                                   {% endfor %}
+                                                  ]
                                           }
                                         ]
                                       },
@@ -387,12 +425,15 @@ window.myBar = new Chart(document.getElementById("GraficaCinco"), {
 window.myBar = new Chart(document.getElementById("GraficaSeis"), {
                                                                         type: 'doughnut',
                                                                         data: {
-                                                                          labels: ["ICMP","TCP","BGP","IP-EIGRP","PIMv2","IGMP","UDP","OSPF","ARP"],
+                                                                          labels: ["IP","ICMP","TCP","BGP","IP-EIGRP","UDP","OSPF","ARP"],
                                                                           datasets: [
                                                                             {
                                                                               label: "Population (millions)",
-                                                                              backgroundColor: ["#FFDE00", "#0091FF","#FF0000","#1AFF00","#FFBC00","#000000","#DE00FF","#00F7FF","#AFAFAF"],
-                                                                              data: [2478,5267,734,784,433,323,434,323,1000]
+                                                                              backgroundColor: ["#FFDE00", "#0091FF","#FF0000","#1AFF00","#FFBC00","#000000","#DE00FF","#00F7FF"],
+                                                                              data: [{% for item in outTraffic %}
+                                                                                      "{{item}}",
+                                                                                      {% endfor %}
+                                                                                    ]
                                                                             }
                                                                           ]
                                                                         },
