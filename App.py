@@ -81,7 +81,10 @@ def obtainDataFromRouter(ip,hostname):
     output1 = device.send_command("show process memory")
     output2 = device.send_command("sh version")
     output3 = device.send_command("sh processes cpu sorted")
+    output4 = device.send_command("sh ip traffic")
 
+    f = open('josue.txt','w')
+    f.write(output4)
     percentageList, freeSpace,usedSpace  = obtainMemory(output1)
     timeUp = obtainTimeUp(output2)
     cpuLoad = obtainCPULoad(output3)
