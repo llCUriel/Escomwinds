@@ -1,3 +1,9 @@
+from mydevices import cisco_ios_centralrouter
+from mydevices import cisco_ios_developDepartamentRouter
+from mydevices import cisco_ios_serversRouter
+from mydevices import cisco_ios_networksRouter
+from mydevices import cisco_ios_financesRouter
+from mydevices import cisco_ios_HRRouter
 from flask import Flask
 from flask import render_template
 from netmiko import ConnectHandler
@@ -11,22 +17,57 @@ import json
 from flask import Response
 import telnetlib
 from netmiko import ConnectHandler
-from mydevices import cisco_ios_centralrouter
 from decimal import Decimal
 import concurrent.futures
 import datetime
 from datetime import date
 import time
+from reportlab.lib.enums import TA_JUSTIFY
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from flask import request
+from selenium import webdriver
 
-centralRouterFilePath = "router/centralRouter"
-connectionList = []
-ipList = ["10.200.200.22"]
+
+devicesList = [cisco_ios_centralrouter,
+               cisco_ios_developDepartamentRouter,
+               cisco_ios_serversRouter,
+               cisco_ios_networksRouter,
+               cisco_ios_financesRouter,
+               cisco_ios_HRRouter
+               ]
+
+
+commonPath = "router/"
+centralRouterFilePath     = commonPath+"centralRouter"
+developmentRouterFilePath = commonPath+"developDepartamentRouter"
+serversRouterFilePath     = commonPath+"serversRouter"
+NetworksRouterFilePath    = commonPath+"networksRouter"
+FinancesRouterFilePath    = commonPath+"financesRouter"
+HRRouterFilePath          = commonPath+"HRRouter"
+
+minTemperature,maxTemperature = 35,45
+
 app = Flask(__name__)
 
 
-def connectAllDevices():
-    for ip in ipList:
-        connectionList.append(connectRouter(ip))
+@app.route("/principal")
+def showPrincipalPage():
+
+    return render_template('principal.html')
+
+@app.route('/generateDeviceReport',methods=['GET','POST'])
+def generateDeviceReport():
+    c = canvas.Canvas('report.pdf')
+    c.drawImage('static/img/EscomC.jpg', 190, 600, 230, 230)
+    c.line(20,590,580,590) #Creación de una linea recta
+    c.drawString(30,750,'test')
+    c.save()
+
+    return redirect(url_for('R6'))
 
 
 def generateRandomNumber(min,max):
@@ -38,8 +79,7 @@ def updateGraphData(methods = ['POST']):
 
 @app.route("/")
 def index():
-    connectAllDevices()
-    return render_template('dashboard.html')
+    return render_template('principal.html')
 
 
 def obtainLastIndex(someList):
@@ -72,56 +112,6 @@ def obtainUpAndDownInterfaces(output):
             downInterfaces.append(finalStr)
     return downInterfaces, upInterfaces
 
-
-def obtainDeviceNeighbors(output):
-    finalList = []
-    splitLines = output.splitlines()[4:]
-    for item in splitLines:
-        finalList.append(item.split()[:-6])
-
-
-    return finalList
-
-def obtainDataFromRouter(ip,hostname):
-
-    device = connectionList[0]
-    output1 = device.send_command("show process memory")
-    output2 = device.send_command("sh version")
-    output3 = device.send_command("sh processes cpu sorted")
-    output4 = device.send_command("sh ip traffic")
-    output5 = device.send_command("sh interfaces")
-    output6 = device.send_command("sh cdp neighbors")
-    deviceneighbors = obtainDeviceNeighbors(output6)
-    downInterfaces, upInterfaces = obtainUpAndDownInterfaces(output5)
-    inTraffic  = obtainTrafficin(output4)
-    outTraffic = obtainTrafficout(output4)
-
-     #ip ,icmp,tcp,bgp,ip-eigrp,udp,ospf,arp
-
-    NVRAM, _memory = obtainNVRAMAndMemory(output2)
-    _hostname = obtainHostName(output2)
-    percentageList, freeSpace,usedSpace  = obtainMemory(output1)
-    timeUp = obtainTimeUp(output2)
-    cpuLoad = obtainCPULoad(output3)
-    #availableBandWidth = obtainAvilableBandWidth()
-    #EscribirRegistro(hostname,'1',str(date.today()),"34.6",timeUp,"100");
-    #temperatura = obtainTemperatura(output3)
-    #carga = obtainCarga(output4)
-    #EscribirRegistro(hostname,1,date.today(),temperatura,timeUp,obtainCarga);
-    temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
-    lastIndex = int(obtainLastIndex(timeUpList))
-    newTemperature = str(generateRandomNumber(39,45))
-    t = time.localtime()
-    current_time = time.strftime("%H:%M:%S", t)
-    writeRegister(hostname,lastIndex+1,current_time,newTemperature,timeUp,cpuLoad)
-    timeUpList.append([lastIndex+1,current_time,timeUp])
-    temperatureList.append([lastIndex+1,current_time,newTemperature])
-    cpuLoadList.append([lastIndex+1,current_time, cpuLoad])
-    freeSpace = str(freeSpace)
-    usedSpace = str(usedSpace)
-
-    return percentageList, temperatureList,timeUpList,cpuLoadList, freeSpace, usedSpace, timeUp, newTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM, _memory, _hostname,inTraffic,outTraffic
-
 def obtainTimeUp(output):
     return output.split()[43]
 
@@ -146,13 +136,6 @@ def writeRegister(hostname,id,date,temperature,timeup,cpuload):
     f.write(line)
     f.close()
 
-def choosePath(hostname):
-    if hostname == 'centralRouter':
-        return centralRouterFilePath
-    else:
-        return ""
-
-
 def obtainAllDataList(hostname):
     dataList = obtainDataList(hostname)
     temperatureList, cpuLoadList, timeUpList = [],[],[]
@@ -164,10 +147,7 @@ def obtainAllDataList(hostname):
         timeUpList.append([list[0],list[dateIndex],int(list[3])])
     return temperatureList,cpuLoadList,timeUpList
 
-def connectRouter(ip):
-    if ip == ipList[0]:
-        return ConnectHandler(**cisco_ios_centralrouter)
-    return False
+
 
 def obtainMemory(routerOutput):
     x=routerOutput.split();
@@ -219,39 +199,90 @@ def obtainHostName(output):
             str = item
     return str.split()[0]
 
+def obtainDeviceNeighbors(output):
+    splitLines = output.splitlines()[4:]
+
+    splitLinesLenght = len(splitLines)
+    newList = []
+
+    str = ""
+    for i in range(splitLinesLenght):
+        if i%2 == 0:
+            str = (splitLines[i].split('.'))[0]
+        else:
+            str = str + splitLines[i]
+            newList.append(((' '.join(str.split())).split(' '))[:4])
+            str = ""
+    return newList
+
+
+def choosePath(hostname):
+    if hostname == 'centralRouter':
+        return centralRouterFilePath
+    elif hostname == 'developmentDepartamentRouter':
+        return developmentRouterFilePath
+    elif hostname == 'serversRouter':
+        return serversRouterFilePath
+    elif hostname == 'networksDepartamentRouter':
+        return NetworksRouterFilePath
+    elif hostname == 'financesDepartamentRouter':
+        return FinancesRouterFilePath
+    elif hostname == 'HRDepartamentRouter':
+        return HRRouterFilePath
+
+def chooseConnection(hostname):
+    if hostname == 'centralRouter':
+        return connectionList[0]
+    elif hostname == 'developmentDepartamentRouter':
+        return connectionList[1]
+    elif hostname == 'serversRouter':
+        return connectionList[2]
+    elif hostname == 'networksDepartamentRouter':
+        return connectionList[3]
+    elif hostname == 'financesDepartamentRouter':
+        return connectionList[4]
+    elif hostname == 'HRDepartamentRouter':
+        return connectionList[5]
+
+def obtainDataFromRouter(ip,hostname, connection):
+
+    device = connection
+    output1 = device.send_command("show process memory")
+    output2 = device.send_command("sh version")
+    output3 = device.send_command("sh processes cpu sorted")
+    output4 = device.send_command("sh ip traffic")
+    output5 = device.send_command("sh interfaces")
+    output6 = device.send_command("sh cdp neighbors")
+    deviceneighbors = obtainDeviceNeighbors(output6)
+    downInterfaces, upInterfaces = obtainUpAndDownInterfaces(output5)
+    inTraffic  = obtainTrafficin(output4)
+    outTraffic = obtainTrafficout(output4)
+     #ip ,icmp,tcp,bgp,ip-eigrp,udp,ospf,arp
+    NVRAM, _memory = obtainNVRAMAndMemory(output2)
+    _hostname = obtainHostName(output2)
+    percentageList, freeSpace,usedSpace  = obtainMemory(output1)
+    timeUp = obtainTimeUp(output2)
+    cpuLoad = obtainCPULoad(output3)
+    temperatureList,cpuLoadList,timeUpList = obtainAllDataList(hostname)
+    lastIndex = int(obtainLastIndex(timeUpList))
+    newTemperature = str(generateRandomNumber(minTemperature,maxTemperature))
+    t = time.localtime()
+    current_time = time.strftime("%H:%M:%S", t)
+    writeRegister(hostname,lastIndex+1,current_time,newTemperature,timeUp,cpuLoad)
+    timeUpList.append([lastIndex+1,current_time,timeUp])
+    temperatureList.append([lastIndex+1,current_time,newTemperature])
+    cpuLoadList.append([lastIndex+1,current_time, cpuLoad])
+    freeSpace = str(freeSpace)
+    usedSpace = str(usedSpace)
+    return percentageList, temperatureList,timeUpList,cpuLoadList, freeSpace, usedSpace, timeUp, newTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM, _memory, _hostname,inTraffic,outTraffic
+
+
 @app.route("/R1")
 def R1():
-    return "R1"
-@app.route("/R2")
-def R2():
-    return "R2"
-@app.route("/R3")
-def R3():
-    return "R3"
-@app.route("/R4")
-def R4():
-    return "R4"
-@app.route("/R5")
-def R5():
-    return "R5"
-@app.route("/R6")
-def R6():
-    deviceName = "C3745-ADVENTERPRISEK9-M"
-    deviceVersion = "Version 12.4(25d)"
-    technicalSupport = "http://www.cisco.com/techsupport"
-    processorBoardID = "FTX0945W0MY"
-    ipAddress = ipList[0]
-    temperatureList, percentageList, timeUpList, cpuLoadList = [],[],[],[]
-
-    #EscribirRegistro("centralRouter","2","2019-11-27","50","100","21\n")
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(obtainDataFromRouter, cisco_ios_centralrouter['ip'],"centralRouter")
-        percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic = future.result()
-
-    temperatureList = temperatureList[-5:]
-    timeUpList = (timeUpList[-5:])[::-1]
-    cpuLoadList = cpuLoadList[-5:]
-
+    connection = ConnectHandler(**cisco_ios_developDepartamentRouter)
+    ip = cisco_ios_developDepartamentRouter['ip']
+    tag = "developmentDepartamentRouter"
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag,connection)
     return render_template('dashboard.html', temperatureList = temperatureList,
                                               percentageList = percentageList,
                                               timeUpList = timeUpList,
@@ -264,15 +295,175 @@ def R6():
                                               processorBoardID = processorBoardID,
                                               downInterfaces = downInterfaces,
                                               upInterfaces = upInterfaces,
-                                              ipAddress = ipAddress,
+                                              ipAddress = ip,
                                               deviceneighbors = deviceneighbors,
                                               totalSpace = usedSpace+freeSpace,
                                               NVRAM = NVRAM,
                                               _memory = _memory,
                                               _hostname = _hostname,
                                               inTraffic = inTraffic,
-                                              outTraffic = outTraffic)
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'Development Department Router (R1)')
+
+@app.route("/R2")
+def R2():
+    connection = ConnectHandler(**cisco_ios_serversRouter)
+    ip = cisco_ios_serversRouter['ip']
+    tag = "serversRouter"
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag,connection)
+    return render_template('dashboard.html', temperatureList = temperatureList,
+                                              percentageList = percentageList,
+                                              timeUpList = timeUpList,
+                                              cpuLoadList = cpuLoadList,
+                                              deviceName = deviceName,
+                                              deviceVersion = deviceVersion,
+                                              freeSpace = freeSpace, usedSpace = usedSpace,
+                                              technicalSupport = technicalSupport,
+                                              lastTimeUp = lastTimeUp, lastTemperature = lastTemperature,
+                                              processorBoardID = processorBoardID,
+                                              downInterfaces = downInterfaces,
+                                              upInterfaces = upInterfaces,
+                                              ipAddress = ip,
+                                              deviceneighbors = deviceneighbors,
+                                              totalSpace = usedSpace+freeSpace,
+                                              NVRAM = NVRAM,
+                                              _memory = _memory,
+                                              _hostname = _hostname,
+                                              inTraffic = inTraffic,
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'Servers Department Router (R2)')
+
+@app.route("/R3")
+def R3():
+    connection = ConnectHandler(**cisco_ios_networksRouter)
+    ip = cisco_ios_networksRouter['ip']
+    tag = 'networksDepartamentRouter'
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag,connection)
+    return render_template('dashboard.html', temperatureList = temperatureList,
+                                              percentageList = percentageList,
+                                              timeUpList = timeUpList,
+                                              cpuLoadList = cpuLoadList,
+                                              deviceName = deviceName,
+                                              deviceVersion = deviceVersion,
+                                              freeSpace = freeSpace, usedSpace = usedSpace,
+                                              technicalSupport = technicalSupport,
+                                              lastTimeUp = lastTimeUp, lastTemperature = lastTemperature,
+                                              processorBoardID = processorBoardID,
+                                              downInterfaces = downInterfaces,
+                                              upInterfaces = upInterfaces,
+                                              ipAddress = ip,
+                                              deviceneighbors = deviceneighbors,
+                                              totalSpace = usedSpace+freeSpace,
+                                              NVRAM = NVRAM,
+                                              _memory = _memory,
+                                              _hostname = _hostname,
+                                              inTraffic = inTraffic,
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'Networks Department Router (R3)')
+
+@app.route("/R4")
+def R4():
+    connection = ConnectHandler(**cisco_ios_financesRouter)
+    ip = cisco_ios_financesRouter['ip']
+    tag = "financesDepartamentRouter"
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag,connection)
+    return render_template('dashboard.html', temperatureList = temperatureList,
+                                              percentageList = percentageList,
+                                              timeUpList = timeUpList,
+                                              cpuLoadList = cpuLoadList,
+                                              deviceName = deviceName,
+                                              deviceVersion = deviceVersion,
+                                              freeSpace = freeSpace, usedSpace = usedSpace,
+                                              technicalSupport = technicalSupport,
+                                              lastTimeUp = lastTimeUp, lastTemperature = lastTemperature,
+                                              processorBoardID = processorBoardID,
+                                              downInterfaces = downInterfaces,
+                                              upInterfaces = upInterfaces,
+                                              ipAddress = ip,
+                                              deviceneighbors = deviceneighbors,
+                                              totalSpace = usedSpace+freeSpace,
+                                              NVRAM = NVRAM,
+                                              _memory = _memory,
+                                              _hostname = _hostname,
+                                              inTraffic = inTraffic,
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'Finances Department Router (R4)')
+
+@app.route("/R5")
+def R5():
+    connection = ConnectHandler(**cisco_ios_HRRouter)
+    ip = cisco_ios_HRRouter['ip']
+    tag = "HRDepartamentRouter"
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag, connection)
+    return render_template('dashboard.html', temperatureList = temperatureList,
+                                              percentageList = percentageList,
+                                              timeUpList = timeUpList,
+                                              cpuLoadList = cpuLoadList,
+                                              deviceName = deviceName,
+                                              deviceVersion = deviceVersion,
+                                              freeSpace = freeSpace, usedSpace = usedSpace,
+                                              technicalSupport = technicalSupport,
+                                              lastTimeUp = lastTimeUp, lastTemperature = lastTemperature,
+                                              processorBoardID = processorBoardID,
+                                              downInterfaces = downInterfaces,
+                                              upInterfaces = upInterfaces,
+                                              ipAddress = ip,
+                                              deviceneighbors = deviceneighbors,
+                                              totalSpace = usedSpace+freeSpace,
+                                              NVRAM = NVRAM,
+                                              _memory = _memory,
+                                              _hostname = _hostname,
+                                              inTraffic = inTraffic,
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'HR Departament Router (R5)')
+
+@app.route("/R6")
+def R6():
+    connection = ConnectHandler(**cisco_ios_centralrouter)
+    ip = cisco_ios_centralrouter['ip']
+    tag = "centralRouter"
+    percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic, deviceName,deviceVersion,technicalSupport,processorBoardID = obtainAllRouterData(ip, tag,connection)
+    return render_template('dashboard.html', temperatureList = temperatureList,
+                                              percentageList = percentageList,
+                                              timeUpList = timeUpList,
+                                              cpuLoadList = cpuLoadList,
+                                              deviceName = deviceName,
+                                              deviceVersion = deviceVersion,
+                                              freeSpace = freeSpace, usedSpace = usedSpace,
+                                              technicalSupport = technicalSupport,
+                                              lastTimeUp = lastTimeUp, lastTemperature = lastTemperature,
+                                              processorBoardID = processorBoardID,
+                                              downInterfaces = downInterfaces,
+                                              upInterfaces = upInterfaces,
+                                              ipAddress = ip,
+                                              deviceneighbors = deviceneighbors,
+                                              totalSpace = usedSpace+freeSpace,
+                                              NVRAM = NVRAM,
+                                              _memory = _memory,
+                                              _hostname = _hostname,
+                                              inTraffic = inTraffic,
+                                              outTraffic = outTraffic,
+                                              pageTittle = 'Central Router (R6)')
+
+
+def obtainAllRouterData(ipAddress, tag, connection):
+    deviceName = "C3745-ADVENTERPRISEK9-M"
+    deviceVersion = "Version 12.4(25d)"
+    technicalSupport = "http://www.cisco.com/techsupport"
+    processorBoardID = "FTX0945W0MY"
+    temperatureList, percentageList, timeUpList, cpuLoadList = [],[],[],[]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(obtainDataFromRouter, ipAddress,tag, connection)
+        percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic = future.result()
+
+    temperatureList = temperatureList[-5:]
+    timeUpList = (timeUpList[-5:])[::-1]
+    cpuLoadList = cpuLoadList[-5:]
+
+    return percentageList,temperatureList,timeUpList, cpuLoadList, freeSpace,usedSpace, lastTimeUp, lastTemperature, downInterfaces, upInterfaces, deviceneighbors, NVRAM,_memory, _hostname,inTraffic,outTraffic,deviceName,deviceVersion,technicalSupport,processorBoardID
+
 
 
 if __name__ == "__main__":
     app.run(port=8001, debug=True)
+
